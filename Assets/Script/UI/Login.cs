@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Text;
 using TMPro;
+using Script.UI;
 
 [Serializable]
 public class LoginRequest
@@ -52,11 +53,9 @@ public class Login : MonoBehaviour
 
     void Start()
     {
-        // Unlock cursor for login UI
         StarterAssets.StarterAssetsInputs.UnlockCursor();
         Time.timeScale = 1.0f;
         
-        // Validate UI references
         if (usernameInput == null)
         {
             Debug.LogError("Login: Username Input is not assigned!");
@@ -103,7 +102,6 @@ public class Login : MonoBehaviour
             statusText.text = "";
         }
         
-        // Check if already logged in and show appropriate UI
         if (IsLoggedIn())
         {
             ShowLoggedInUI();
@@ -111,6 +109,11 @@ public class Login : MonoBehaviour
         else
         {
             ShowLoginUI();
+        }
+        
+        if (loginPanel != null)
+        {
+            GameController.ShowPanel(loginPanel);
         }
     }
 
@@ -156,11 +159,10 @@ public class Login : MonoBehaviour
         int userId = GetUserId();
         string role = GetUserRole();
         
-        // Activate game and hide login UI
+        GameController.HidePanel(loginPanel);
         StarterAssets.StarterAssetsInputs.SetGameActive(true);
         HideLoginUIForGameplay();
         
-        // Show user info
         if (statusText != null)
         {
             statusText.text = $"🔐 LOGGED IN\n" +
@@ -191,22 +193,15 @@ public class Login : MonoBehaviour
     // Pauses game and shows Continue/Logout menu
     public void ShowPauseMenu()
     {
-        // Pause game but don't logout yet
-        StarterAssets.StarterAssetsInputs.SetGameActive(false);
+        GameController.ShowPanel(loginPanel);
         
-        // Show pause UI - only Continue and Logout buttons
-        if (loginPanel != null) loginPanel.SetActive(true);
-        
-        // Hide login inputs
         if (usernameInput != null) usernameInput.gameObject.SetActive(false);
         if (passwordInput != null) passwordInput.gameObject.SetActive(false);
         if (loginButton != null) loginButton.gameObject.SetActive(false);
         
-        // Show Continue and Logout buttons
         if (continueButton != null) continueButton.gameObject.SetActive(true);
         if (logoutButton != null) logoutButton.gameObject.SetActive(true);
         
-        // Show pause message
         if (statusText != null)
         {
             string username = GetUsername();
