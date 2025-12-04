@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.Networking;
-using System.Collections;
 
 public class APIHelper : MonoBehaviour
 {
@@ -90,3 +89,10 @@ public class APIHelper : MonoBehaviour
     }
 }
 
+public class AcceptAllCertificates : CertificateHandler
+{
+    protected override bool ValidateCertificate(byte[] certificateData)
+    {
+        return true;
+    }
+}

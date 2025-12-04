@@ -195,14 +195,16 @@ namespace Script.Enemy
     
     private void OnRestartButtonClicked()
     {
-        Debug.Log("🔄 RESTART CLICKED!");
-        
-        GameController.ClearAllPanels();
+        _hasKilledPlayer = false;
+        _isAttacking = false;
+        _hasCheckedThisAttack = false;
         
         if (youreDeadPanel != null)
         {
             youreDeadPanel.SetActive(false);
         }
+        
+        GameController.ResumeGame(youreDeadPanel);
         
         TeleportToCheckpoints();
         
@@ -210,14 +212,6 @@ namespace Script.Enemy
         {
             enemyAnimator.SetBool(_isAttackHash, false);
         }
-        
-        _hasKilledPlayer = false;
-        _isAttacking = false;
-        _hasCheckedThisAttack = false;
-        
-        StarterAssets.StarterAssetsInputs.SetGameActive(true);
-        
-        Debug.Log("✅ RESTART COMPLETE!");
     }
     
     private void TeleportToCheckpoints()

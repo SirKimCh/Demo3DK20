@@ -230,35 +230,5 @@ namespace Script.UI
         {
             return obj.GetComponentInParent<Canvas>() != null;
         }
-
-        public static void ClearAllPanels()
-        {
-            Debug.Log($"ClearAllPanels: Clearing {Instance._activePanels.Count} panels, isGamePaused={Instance._isGamePaused}");
-            
-            foreach (GameObject panel in Instance._activePanels)
-            {
-                if (panel != null)
-                {
-                    panel.SetActive(false);
-                }
-            }
-            
-            Instance._activePanels.Clear();
-            Instance._isGamePaused = false;
-            
-            Debug.Log($"Enabling {Instance._animatorStates.Count} animators");
-            EnableAllAnimators();
-            
-            Debug.Log($"Enabling {Instance._rigidbodyStates.Count} rigidbodies");
-            EnableAllRigidbodies();
-            
-            Debug.Log($"Enabling {Instance._characterControllerStates.Count} character controllers");
-            EnableAllCharacterControllers();
-            
-            Debug.Log($"Enabling {Instance._scriptStates.Count} scripts");
-            EnableGameplayScripts();
-            
-            Debug.Log("ClearAllPanels COMPLETE");
-        }
     }
 }

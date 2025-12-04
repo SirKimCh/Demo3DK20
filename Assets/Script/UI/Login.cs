@@ -3,7 +3,6 @@ using UnityEngine.UI;
 using UnityEngine.Networking;
 using System;
 using System.Collections;
-using System.Text;
 using TMPro;
 using Script.UI;
 
@@ -34,22 +33,23 @@ public class Login : MonoBehaviour
     [SerializeField] private Button loginButton;
     [SerializeField] private Button continueButton;
     [SerializeField] private Button logoutButton;
-    [SerializeField] private GameObject loginPanel; // Panel chứa tất cả UI login (background)
+    [SerializeField] private Button registerButton;
+    [SerializeField] private GameObject loginPanel;
+    [SerializeField] private GameObject registerPanel;
     
     [Header("Optional UI Feedback")]
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private GameObject loadingPanel;
-    [SerializeField] private TMP_Text logoutHintText; // Text hiển thị hint "Press Tab to logout"
     
     [Header("API Configuration")]
     [SerializeField] private string apiUrl = "https://localhost:7237/api/Auth/Login";
     
-    private const string TOKEN_KEY = "JWT_TOKEN";
-    private const string USER_ID_KEY = "USER_ID";
-    private const string USERNAME_KEY = "USERNAME";
-    private const string ROLE_KEY = "USER_ROLE";
+    private const string TokenKey = "JWT_TOKEN";
+    private const string UserIdKey = "USER_ID";
+    private const string UsernameKey = "USERNAME";
+    private const string RoleKey = "USER_ROLE";
     
-    private bool isLoggingIn = false;
+    private bool _isLoggingIn;
 
     void Start()
     {
@@ -92,9 +92,20 @@ public class Login : MonoBehaviour
             logoutButton.onClick.AddListener(OnLogoutButtonClicked);
         }
         
+        if (registerButton != null)
+        {
+            registerButton.onClick.RemoveAllListeners();
+            registerButton.onClick.AddListener(OnRegisterButtonClicked);
+        }
+        
         if (loadingPanel != null)
         {
             loadingPanel.SetActive(false);
+        }
+        
+        if (registerPanel != null)
+        {
+            registerPanel.SetActive(false);
         }
         
         if (statusText != null)
@@ -120,7 +131,7 @@ public class Login : MonoBehaviour
 
     public void OnLoginButtonClicked()
     {
-        if (isLoggingIn) return;
+        if (_isLoggingIn) return;
         
         if (usernameInput == null || passwordInput == null)
         {
@@ -175,18 +186,46 @@ public class Login : MonoBehaviour
     
     public void OnLogoutButtonClicked()
     {
-        // Clear saved data
-        PlayerPrefs.DeleteKey(TOKEN_KEY);
-        PlayerPrefs.DeleteKey(USER_ID_KEY);
-        PlayerPrefs.DeleteKey(USERNAME_KEY);
-        PlayerPrefs.DeleteKey(ROLE_KEY);
+        PlayerPrefs.DeleteKey(TokenKey);
+        PlayerPrefs.DeleteKey(UserIdKey);
+        PlayerPrefs.DeleteKey(UsernameKey);
+        PlayerPrefs.DeleteKey(RoleKey);
         PlayerPrefs.Save();
         
-        // Deactivate game and unlock cursor
         StarterAssets.StarterAssetsInputs.SetGameActive(false);
         
-        // Show login UI again
         ShowLoginUI();
+        
+        if (loginPanel != null)
+        {
+            GameController.ShowPanel(loginPanel);
+        }
+    }
+    
+    public void OnRegisterButtonClicked()
+    {
+        if (loginPanel != null)
+        {
+            loginPanel.SetActive(false);
+        }
+        
+        if (registerPanel != null)
+        {
+            registerPanel.SetActive(true);
+        }
+    }
+    
+    public void ShowLoginFromRegister()
+    {
+        if (registerPanel != null)
+        {
+            registerPanel.SetActive(false);
+        }
+        
+        if (loginPanel != null)
+        {
+            loginPanel.SetActive(true);
+        }
     }
     
     // Method called when ESC is pressed during gameplay
@@ -198,6 +237,7 @@ public class Login : MonoBehaviour
         if (usernameInput != null) usernameInput.gameObject.SetActive(false);
         if (passwordInput != null) passwordInput.gameObject.SetActive(false);
         if (loginButton != null) loginButton.gameObject.SetActive(false);
+        if (registerButton != null) registerButton.gameObject.SetActive(false);
         
         if (continueButton != null) continueButton.gameObject.SetActive(true);
         if (logoutButton != null) logoutButton.gameObject.SetActive(true);
@@ -213,15 +253,13 @@ public class Login : MonoBehaviour
     
     private void ShowLoginUI()
     {
-        // Show login panel (background)
         if (loginPanel != null) loginPanel.SetActive(true);
         
-        // Show login inputs and buttons
         if (usernameInput != null) usernameInput.gameObject.SetActive(true);
         if (passwordInput != null) passwordInput.gameObject.SetActive(true);
         if (loginButton != null) loginButton.gameObject.SetActive(true);
+        if (registerButton != null) registerButton.gameObject.SetActive(true);
         
-        // Hide logout button during login
         if (logoutButton != null) logoutButton.gameObject.SetActive(false);
         
         // Show or hide continue button based on saved data
@@ -246,15 +284,13 @@ public class Login : MonoBehaviour
         int userId = GetUserId();
         string role = GetUserRole();
         
-        // Show login panel (background)
         if (loginPanel != null) loginPanel.SetActive(true);
         
-        // Show login inputs (allow login with new account)
         if (usernameInput != null) usernameInput.gameObject.SetActive(true);
         if (passwordInput != null) passwordInput.gameObject.SetActive(true);
         if (loginButton != null) loginButton.gameObject.SetActive(true);
+        if (registerButton != null) registerButton.gameObject.SetActive(true);
         
-        // Show continue and logout buttons
         if (continueButton != null) continueButton.gameObject.SetActive(true);
         if (logoutButton != null) logoutButton.gameObject.SetActive(true);
         
@@ -268,24 +304,20 @@ public class Login : MonoBehaviour
     
     private void HideLoginUIForGameplay()
     {
-        // HIDE LOGIN PANEL - ẨN HOÀN TOÀN BACKGROUND
         if (loginPanel != null) loginPanel.SetActive(false);
         
-        // Hide all UI components during gameplay
         if (usernameInput != null) usernameInput.gameObject.SetActive(false);
         if (passwordInput != null) passwordInput.gameObject.SetActive(false);
         if (loginButton != null) loginButton.gameObject.SetActive(false);
+        if (registerButton != null) registerButton.gameObject.SetActive(false);
         if (continueButton != null) continueButton.gameObject.SetActive(false);
         if (logoutButton != null) logoutButton.gameObject.SetActive(false);
         if (loadingPanel != null) loadingPanel.SetActive(false);
-        
-
-        // Keep statusText visible (not inside loginPanel)
     }
     
     private IEnumerator LoginCoroutine(string username, string password)
     {
-        isLoggingIn = true;
+        _isLoggingIn = true;
         
         if (loadingPanel != null)
         {
@@ -299,7 +331,6 @@ public class Login : MonoBehaviour
         
         ShowStatus("Logging in...", false);
         
-        // Prepare request data
         LoginRequest loginData = new LoginRequest
         {
             userName = username,
@@ -307,18 +338,10 @@ public class Login : MonoBehaviour
         };
         
         string jsonData = JsonUtility.ToJson(loginData);
-        byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonData);
         
-        // Create web request
-        using (UnityWebRequest request = new UnityWebRequest(apiUrl, "POST"))
+        using (UnityWebRequest request = APIHelper.CreateAuthenticatedPostRequest(apiUrl, jsonData))
         {
-            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-            request.downloadHandler = new DownloadHandlerBuffer();
-            request.SetRequestHeader("Content-Type", "application/json");
-            request.SetRequestHeader("accept", "text/plain");
-            request.certificateHandler = new AcceptAllCertificates();
             request.timeout = 10;
-            
             yield return request.SendWebRequest();
             
             if (loadingPanel != null)
@@ -341,20 +364,16 @@ public class Login : MonoBehaviour
                     
                     if (response != null && !string.IsNullOrEmpty(response.token))
                     {
-                        // Save token and user data
-                        PlayerPrefs.SetString(TOKEN_KEY, response.token);
-                        PlayerPrefs.SetInt(USER_ID_KEY, response.id);
-                        PlayerPrefs.SetString(USERNAME_KEY, response.userName);
-                        PlayerPrefs.SetString(ROLE_KEY, response.roleName);
+                        PlayerPrefs.SetString(TokenKey, response.token);
+                        PlayerPrefs.SetInt(UserIdKey, response.id);
+                        PlayerPrefs.SetString(UsernameKey, response.userName);
+                        PlayerPrefs.SetString(RoleKey, response.roleName);
                         PlayerPrefs.Save();
                         
-                        // Show user info on statusText
                         ShowUserInfo(response);
                         
-                        // Activate game and lock cursor
+                        GameController.HidePanel(loginPanel);
                         StarterAssets.StarterAssetsInputs.SetGameActive(true);
-                        
-                        // Hide login UI
                         HideLoginUIForGameplay();
                     }
                     else
@@ -397,7 +416,7 @@ public class Login : MonoBehaviour
             }
         }
         
-        isLoggingIn = false;
+        _isLoggingIn = false;
     }
     
     private void ShowStatus(string message, bool isError)
@@ -422,28 +441,25 @@ public class Login : MonoBehaviour
         }
     }
     
-    // Public method to get stored token
     public static string GetStoredToken()
     {
-        return PlayerPrefs.GetString(TOKEN_KEY, "");
+        return PlayerPrefs.GetString(TokenKey, "");
     }
     
-    // Public method to check if user is logged in
     public static bool IsLoggedIn()
     {
         return !string.IsNullOrEmpty(GetStoredToken());
     }
     
-    // Public method to logout
     public static void Logout()
     {
         string username = GetUsername();
         int userId = GetUserId();
         
-        PlayerPrefs.DeleteKey(TOKEN_KEY);
-        PlayerPrefs.DeleteKey(USER_ID_KEY);
-        PlayerPrefs.DeleteKey(USERNAME_KEY);
-        PlayerPrefs.DeleteKey(ROLE_KEY);
+        PlayerPrefs.DeleteKey(TokenKey);
+        PlayerPrefs.DeleteKey(UserIdKey);
+        PlayerPrefs.DeleteKey(UsernameKey);
+        PlayerPrefs.DeleteKey(RoleKey);
         PlayerPrefs.Save();
         
         StarterAssets.StarterAssetsInputs.SetGameActive(false);
@@ -451,30 +467,19 @@ public class Login : MonoBehaviour
         Debug.Log($"🔓 LOGOUT | User: {username} | ID: {userId}");
     }
     
-    // Public method to get user info
     public static string GetUsername()
     {
-        return PlayerPrefs.GetString(USERNAME_KEY, "");
+        return PlayerPrefs.GetString(UsernameKey, "");
     }
     
     public static int GetUserId()
     {
-        return PlayerPrefs.GetInt(USER_ID_KEY, -1);
+        return PlayerPrefs.GetInt(UserIdKey, -1);
     }
     
     public static string GetUserRole()
     {
-        return PlayerPrefs.GetString(ROLE_KEY, "");
+        return PlayerPrefs.GetString(RoleKey, "");
     }
 }
 
-// Certificate handler to accept self-signed certificates (localhost HTTPS)
-public class AcceptAllCertificates : CertificateHandler
-{
-    protected override bool ValidateCertificate(byte[] certificateData)
-    {
-        // WARNING: Only use this for localhost development
-        // In production, properly validate certificates
-        return true;
-    }
-}
